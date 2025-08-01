@@ -1,123 +1,195 @@
 #!/bin/bash
-# Eco PANEL INSTALLER BY PRO GAMER
 
-while true; do
-  clear
-  echo "==============================="
-  echo "🌐 ECO PANEL INSTALLER BY PRO GAMER"
-  echo "==============================="
-  echo "[1] Pterodactyl"
-  echo "[2] Zexatyle"
-  echo "[3] Exit"
-  echo "==============================="
-  read -p "Choose an option: " panel_choice
+clear
+echo "==============================================="
+echo "         PANEL INSTALLER BY PRO GAMER"
+echo "==============================================="
 
-  if [[ $panel_choice == "1" ]]; then
-    while true; do
-      clear
-      echo "=== PTERODACTYL INSTALLER ==="
-      echo "[1] Install Panel"
-      echo "[2] Install Wings"
-      echo "[3] Install Blueprint"
-      echo "[4] Back"
-      echo "==============================="
-      read -p "Select an option: " pt_option
+main_menu() {
+    echo ""
+    echo "[1] Pterodactyl"
+    echo "[2] Jexactyl"
+    echo "[3] Exit"
+    echo ""
+    read -p "Enter your choice: " main_choice
 
-      case $pt_option in
-        1)
-          echo "Installing Pterodactyl Panel..."
-          apt update -y && apt upgrade -y
-          apt install -y nginx mariadb-server php php-cli php-mysql php-gd php-mbstring php-xml php-bcmath php-curl unzip git curl tar
-          curl -s https://raw.githubusercontent.com/pterodactyl/installer/main/install.sh | bash
-          echo "✅ Panel installed!"
-          read -p "Press enter to continue..."
-          ;;
-        2)
-          echo "Installing Wings..."
-          curl -s https://raw.githubusercontent.com/pterodactyl/wings/main/install.sh | bash
-          echo "✅ Wings installed!"
-          read -p "Enter your Wings token: " token
-          echo "$token" > /etc/pterodactyl/token.txt
-          echo "Token saved. Setup your node in the panel."
-          read -p "Press enter to continue..."
-          ;;
-        3)
-          echo "Installing Blueprint..."
-          cd /var/www/pterodactyl
-          curl -s https://raw.githubusercontent.com/BlueprintPanel/Blueprint/main/scripts/install.sh | bash
-          echo "✅ Blueprint installed!"
-          read -p "Press enter to continue..."
-          ;;
-        4)
-          break
-          ;;
-        *)
-          echo "❌ Invalid option"
-          sleep 1
-          ;;
-      esac
-    done
+    case $main_choice in
+        1) pterodactyl_menu ;;
+        2) jexactyl_menu ;;
+        3) exit 0 ;;
+        *) echo "Invalid choice."; main_menu ;;
+    esac
+}
 
-  elif [[ $panel_choice == "2" ]]; then
-    while true; do
-      clear
-      echo "=== ZEXATYLE INSTALLER ==="
-      echo "[1] Install Panel"
-      echo "[2] Install Wings"
-      echo "[3] Install Themes"
-      echo "[4] Install Modules"
-      echo "[5] Back"
-      echo "==============================="
-      read -p "Select an option: " zx_option
+pterodactyl_menu() {
+    echo ""
+    echo "=== PTERODACTYL INSTALL OPTIONS ==="
+    echo "[1] Panel Install"
+    echo "[2] Wings Install"
+    echo "[3] Blueprint Install"
+    echo "[4] Back"
+    read -p "Choose an option: " ptero_choice
 
-      case $zx_option in
-        1)
-          echo "Installing Zexatyle Panel..."
-          apt update && apt upgrade -y
-          apt install -y nginx mariadb-server php php-cli php-mysql php-gd php-mbstring php-xml php-bcmath php-curl unzip git curl tar
-          curl -s https://raw.githubusercontent.com/ZexatyleDev/installer/main/install.sh | bash
-          echo "✅ Zexatyle Panel installed!"
-          read -p "Press enter to continue..."
-          ;;
-        2)
-          echo "Installing Wings for Zexatyle..."
-          curl -s https://raw.githubusercontent.com/ZexatyleDev/wings/main/install.sh | bash
-          read -p "Enter your Wings token: " token
-          echo "$token" > /etc/zexatyle/token.txt
-          echo "Token saved. Setup your node in the panel."
-          read -p "Press enter to continue..."
-          ;;
-        3)
-          echo "Installing Zexatyle Themes..."
-          cd /var/www/zexatyle
-          git clone https://github.com/ZexatyleDev/themes themes
-          bash themes/install.sh
-          echo "✅ Themes installed!"
-          read -p "Press enter to continue..."
-          ;;
-        4)
-          echo "Installing Zexatyle Modules..."
-          cd /var/www/zexatyle
-          git clone https://github.com/ZexatyleDev/modules modules
-          bash modules/install.sh
-          echo "✅ Modules installed!"
-          read -p "Press enter to continue..."
-          ;;
-        5)
-          break
-          ;;
-        *)
-          echo "❌ Invalid option"
-          sleep 1
-          ;;
-      esac
-    done
+    case $ptero_choice in
+        1) install_pterodactyl_panel ;;
+        2) install_wings ;;
+        3) install_blueprint ;;
+        4) main_menu ;;
+        *) echo "Invalid choice."; pterodactyl_menu ;;
+    esac
+}
 
-  elif [[ $panel_choice == "3" ]]; then
-    echo "Exiting installer. Bye, PRO GAMER!"
-    break
-  else
-    echo "❌ Invalid input"
-    sleep 1
-  fi
-done
+jexactyl_menu() {
+    echo ""
+    echo "=== JEXACTYL INSTALL OPTIONS ==="
+    echo "[1] Panel Install"
+    echo "[2] Wings Install"
+    echo "[3] Back"
+    read -p "Choose an option: " jex_choice
+
+    case $jex_choice in
+        1) install_jexactyl_panel ;;
+        2) install_wings ;;
+        3) main_menu ;;
+        *) echo "Invalid choice."; jexactyl_menu ;;
+    esac
+}
+
+install_pterodactyl_panel() {
+    echo "Updating system..."
+    apt update && apt upgrade -y
+    apt install -y nginx mariadb-server php php-cli php-mysql php-mbstring php-xml php-bcmath unzip curl tar git redis php-redis
+
+    echo ""
+    read -p "Enter your domain (leave blank to use VPS IP): " domain
+    if [ -z "$domain" ]; then
+        domain=$(curl -s https://ipinfo.io/ip)
+        echo "Using IP: $domain"
+    fi
+
+    echo ""
+    read -p "Enter database name: " dbname
+    read -p "Enter database username: " dbuser
+    read -p "Enter database password: " dbpass
+
+    mysql -u root <<MYSQL_SCRIPT
+CREATE DATABASE ${dbname};
+CREATE USER '${dbuser}'@'127.0.0.1' IDENTIFIED BY '${dbpass}';
+GRANT ALL PRIVILEGES ON ${dbname}.* TO '${dbuser}'@'127.0.0.1';
+FLUSH PRIVILEGES;
+MYSQL_SCRIPT
+
+    cd /var/www/
+    curl -Lo panel.tar.gz https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz
+    mkdir -p pterodactyl && tar -xzvf panel.tar.gz -C pterodactyl
+    cd pterodactyl
+    cp .env.example .env
+    curl -sL https://deb.nodesource.com/setup_18.x | bash -
+    apt install -y nodejs yarn
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
+    composer install --no-dev --optimize-autoloader
+
+    php artisan key:generate --force
+    php artisan p:environment:setup
+    php artisan p:environment:database
+    php artisan migrate --seed --force
+    php artisan p:user:make
+
+    yarn install
+    yarn build:production
+
+    chown -R www-data:www-data /var/www/pterodactyl/*
+    systemctl restart nginx
+
+    echo ""
+    echo "✅ Pterodactyl Panel installed at: http://$domain"
+    pterodactyl_menu
+}
+
+install_wings() {
+    echo ""
+    read -p "Enter Node token from panel: " token
+
+    curl -sSL https://get.docker.com/ | sh
+    systemctl enable --now docker
+
+    curl -o /usr/local/bin/wings https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64
+    chmod +x /usr/local/bin/wings
+    mkdir -p /etc/pterodactyl
+    echo "$token" > /etc/pterodactyl/config.yml
+
+    systemctl enable --now wings
+
+    echo "✅ Wings installed and configured"
+    main_menu
+}
+
+install_blueprint() {
+    echo ""
+    cd /var/www/pterodactyl
+    mkdir -p extensions
+    curl -L https://github.com/pterodactyl/blueprint/releases/latest/download/blueprint.phar -o blueprint.phar
+    chmod +x blueprint.phar
+    ./blueprint.phar install
+    php artisan optimize:clear
+    yarn build:production
+    chown -R www-data:www-data /var/www/pterodactyl/*
+    systemctl restart nginx
+
+    echo "✅ Blueprint installed"
+    main_menu
+}
+
+install_jexactyl_panel() {
+    echo "Updating system..."
+    apt update && apt upgrade -y
+    apt install -y nginx mariadb-server php php-cli php-mysql php-mbstring php-xml php-bcmath unzip curl tar git redis php-redis
+
+    echo ""
+    read -p "Enter your domain (leave blank to use VPS IP): " domain
+    if [ -z "$domain" ]; then
+        domain=$(curl -s https://ipinfo.io/ip)
+        echo "Using IP: $domain"
+    fi
+
+    echo ""
+    read -p "Enter database name: " dbname
+    read -p "Enter database username: " dbuser
+    read -p "Enter database password: " dbpass
+
+    mysql -u root <<MYSQL_SCRIPT
+CREATE DATABASE ${dbname};
+CREATE USER '${dbuser}'@'127.0.0.1' IDENTIFIED BY '${dbpass}';
+GRANT ALL PRIVILEGES ON ${dbname}.* TO '${dbuser}'@'127.0.0.1';
+FLUSH PRIVILEGES;
+MYSQL_SCRIPT
+
+    cd /var/www/
+    git clone https://github.com/jexactyl/jexactyl.git
+    cd jexactyl
+    cp .env.example .env
+
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
+    composer install --no-dev --optimize-autoloader
+
+    curl -sL https://deb.nodesource.com/setup_18.x | bash -
+    apt install -y nodejs yarn
+    yarn install
+    yarn build
+
+    php artisan key:generate --force
+    php artisan migrate --seed --force
+    php artisan p:user:make
+
+    chown -R www-data:www-data /var/www/jexactyl
+    systemctl restart nginx
+
+    echo ""
+    echo "✅ Jexactyl Panel installed at: http://$domain"
+    jexactyl_menu
+}
+
+# Start the installer
+main_menu
